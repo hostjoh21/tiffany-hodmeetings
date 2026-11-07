@@ -11,11 +11,11 @@ export async function POST(request) {
     return Response.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  const input = cleanAgendaInput(body && body.meeting, body && body.items);
+  const input = cleanAgendaInput(body && body.meeting, body && body.items, body && body.participants);
   if (input.error) return Response.json({ error: input.error }, { status: 400 });
 
   try {
-    const bytes = await buildAgendaPdf(input.meeting, input.items);
+    const bytes = await buildAgendaPdf(input.meeting, input.items, input.participants);
     return new Response(Buffer.from(bytes), {
       headers: {
         "Content-Type": "application/pdf",

@@ -3,9 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   DEFAULT_ITEMS,
+  DEFAULT_PARTICIPANTS,
   buildAgenda,
   fmtDate,
   fmtTime,
+  listedParticipants,
   nextMeetingDate,
   toMinutes,
 } from "../lib/agenda";
@@ -22,6 +24,7 @@ export default function AgendaForm({ defaultEmail }) {
     recap: "",
   });
   const [items, setItems] = useState(blankItems);
+  const [people, setPeople] = useState(() => DEFAULT_PARTICIPANTS.map((p) => ({ ...p })));
   const [email, setEmail] = useState(defaultEmail);
   const [code, setCode] = useState("");
   const [state, setState] = useState({ kind: "idle", text: "" });
@@ -36,6 +39,7 @@ export default function AgendaForm({ defaultEmail }) {
     if (draft && draft.items && draft.items.length === DEFAULT_ITEMS.length) {
       setMeeting({ ...draft.meeting, date: draft.meeting.date || nextMeetingDate() });
       setItems(draft.items);
+      if (Array.isArray(draft.people) && draft.people.length) setPeople(draft.people);
       if (draft.email) setEmail(draft.email);
     } else {
       setMeeting((m) => ({ ...m, date: nextMeetingDate() }));
@@ -45,14 +49,21 @@ export default function AgendaForm({ defaultEmail }) {
   useEffect(() => {
     if (!meeting.date) return;
     try {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({ meeting, items, email }));
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ meeting, items, people, email }));
     } catch (e) {}
-  }, [meeting, items, email]);
+  }, [meeting, items, people, email]);
 
   const agenda = useMemo(() => buildAgenda(meeting, items), [meeting, items]);
 
   const setItem = (i, patch) =>
     setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
+
+  const setPerson = (i, patch) =>
+    setPeople((prev) => prev.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
+  const addPerson = () => setPeople((prev) => [...prev, { name: "", title: "", present: true }]);
+  const removePerson = (i) => setPeople((prev) => prev.filter((_, idx) => idx !== i));
+  const listed = listedParticipants(people);
+  const presentCount = listed.filter((p) => p.present).length;
 
   async function downloadPdf() {
     setPdf({ kind: "busy", text: "Preparing PDF…" });
@@ -60,7 +71,7 @@ export default function AgendaForm({ defaultEmail }) {
       const res = await fetch("/api/pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ meeting, items }),
+        body: JSON.stringify({ meeting, items, participants: people }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -88,7 +99,7 @@ export default function AgendaForm({ defaultEmail }) {
       const res = await fetch("/api/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, to: email, meeting, items }),
+        body: JSON.stringify({ code, to: email, meeting, items, participants: people }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
@@ -133,9 +144,44 @@ export default function AgendaForm({ defaultEmail }) {
           </div>
 
           <div className="panel">
-            <h2>2. Participants and agenda items</h2>
+            <h2>2. Meeting participants</h2>
             <p className="hint" style={{ margin: "-4px 0 12px" }}>
-              Open an item to enter the person&apos;s name and key points. Minutes can be changed.
+              Enter the name of each person who attended. Titles are filled in and can be edited. Untick
+              Present for someone who did not attend. Rows without a name are left out of the report.
+            </p>
+            <div className="people">
+              {people.map((p, i) => (
+                <div className="person" key={i}>
+                  <label className="chk" htmlFor={"pp" + i}>
+                    <input id={"pp" + i} type="checkbox" checked={p.present}
+                      onChange={(e) => setPerson(i, { present: e.target.checked })} />
+                    <span>Present</span>
+                  </label>
+                  <div>
+                    <label className="lab" htmlFor={"pn" + i}>Name</label>
+                    <input id={"pn" + i} type="text" value={p.name} placeholder="Full name"
+                      onChange={(e) => setPerson(i, { name: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="lab" htmlFor={"pt" + i}>Title</label>
+                    <input id={"pt" + i} type="text" value={p.title} placeholder="Job title"
+                      onChange={(e) => setPerson(i, { title: e.target.value })} />
+                  </div>
+                  <button type="button" className="ghost" aria-label={"Remove row " + (i + 1)}
+                    onClick={() => removePerson(i)}>Remove</button>
+                </div>
+              ))}
+            </div>
+            <div className="total">
+              <span>Present: <b>{presentCount}</b> of <b>{listed.length}</b> listed</span>
+              <button type="button" className="ghost" onClick={addPerson}>Add participant</button>
+            </div>
+          </div>
+
+          <div className="panel">
+            <h2>3. Agenda items</h2>
+            <p className="hint" style={{ margin: "-4px 0 12px" }}>
+              Open an item to enter the presenter&apos;s name and key points. Minutes can be changed.
             </p>
             <div className="stack">
               {DEFAULT_ITEMS.map((d, i) => {
@@ -192,6 +238,29 @@ export default function AgendaForm({ defaultEmail }) {
               <span>Time: <b>{fmtTime(toMinutes(meeting.start))} - {agenda.endTime}</b></span>
               <span>Venue: <b>{meeting.venue || "-"}</b></span>
             </div>
+            {listed.length ? (
+              <>
+                <h4 className="sec">Meeting Participants <span>Present {presentCount} of {listed.length}</span></h4>
+                <div className="tw">
+                  <table className="ptable">
+                    <thead>
+                      <tr><th>No.</th><th>Name</th><th>Title</th><th>Attendance</th></tr>
+                    </thead>
+                    <tbody>
+                      {listed.map((p, i) => (
+                        <tr key={i}>
+                          <td>{i + 1}</td>
+                          <td className="who">{p.name}</td>
+                          <td>{p.title}</td>
+                          <td className={p.present ? "good" : ""}><b>{p.present ? "Present" : "Absent"}</b></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            ) : null}
+            <h4 className="sec">Order of Business</h4>
             <div className="tw">
               <table>
                 <thead>
@@ -225,7 +294,7 @@ export default function AgendaForm({ defaultEmail }) {
           </div>
 
           <form className="panel share" onSubmit={submit}>
-            <h2>3. Send to all participants</h2>
+            <h2>4. Send to all participants</h2>
             <p className="hint" style={{ margin: "-4px 0 12px" }}>
               The email includes the agenda and the PDF report as an attachment.
             </p>

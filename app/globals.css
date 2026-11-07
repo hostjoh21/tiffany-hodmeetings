@@ -75,3 +75,14 @@ header.top .meta-note{color:#5b6b78;max-width:60ch;margin-top:8px}
 header.top .stripe{height:8px;background:linear-gradient(90deg,#e8632a 0 16.66%,#97bf3c 16.66% 33.33%,#e8c81a 33.33% 66.66%,#97bf3c 66.66% 83.33%,#e8632a 83.33% 100%)}
 button.brand{background:#e8632a;border-color:#e8632a;color:#fff}
 th{border-bottom-color:#e8632a}
+
+/* Participants */
+.people{display:flex;flex-direction:column;gap:10px}
+.person{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,1fr) auto;gap:10px;align-items:end;padding:10px;border:1px solid var(--line);border-radius:8px}
+@media (max-width:620px){.person{grid-template-columns:minmax(0,1fr) auto}.person>div{grid-column:1/-1}.person .chk{grid-column:1}.person button{grid-column:2;grid-row:1}}
+.chk{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding-bottom:9px}
+.chk input{width:auto;accent-color:#e8632a}
+button.ghost{background:transparent;color:var(--fg);border-color:var(--line);font-size:13px;padding:8px 12px}
+.sec{font-family:var(--display);font-size:16px;margin:18px 0 8px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.sec span{font-family:var(--body);font-size:13px;font-weight:600;color:var(--muted)}
+.ptable{min-width:420px}

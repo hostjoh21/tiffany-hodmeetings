@@ -5,6 +5,7 @@ HR fills in one form for the weekly operations meeting. The agenda builds itself
 Stack: Next.js 14 (App Router) on Vercel, Supabase (Postgres), Resend (email).
 
 ## 1. Supabase
+(Already ran an older `schema.sql`? Run the single `alter table ... add column if not exists participants` line from the new file once.)
 1. Create a project at supabase.com.
 2. Open **SQL Editor** and run `supabase/schema.sql`.
 3. Copy **Project URL** and the **service_role** key from Project Settings > API.
@@ -46,7 +47,7 @@ npm run dev
 ```
 
 ## How it works
-- `components/AgendaForm.js`: the form and live agenda. Draft is kept in the browser until sent.
+- `components/AgendaForm.js`: the form and live agenda, including the Meeting Participants list (name, title, present or absent; rows without a name are left out). Draft is kept in the browser until sent.
 - `app/api/send/route.js`: checks the access code and email (meeting length is free, set by HR), saves to `meeting_agendas` (status `pending`), sends via Resend, then marks it `sent` or `failed`.
 - `lib/agenda.js`: the 12 agenda items, time slots, and the email text and HTML.
 - `lib/pdf.js` and `app/api/pdf/route.js`: the A4 PDF report in the logo's colours (download button on the form; also attached to the email). The logo is embedded from `lib/logoData.js`.

@@ -39,9 +39,9 @@ export async function POST(request) {
     return fail(400, "Enter a valid participants' email address.");
   }
 
-  const input = cleanAgendaInput(body.meeting, body.items);
+  const input = cleanAgendaInput(body.meeting, body.items, body.participants);
   if (input.error) return fail(400, input.error);
-  const { meeting: clean, items: cleanItems } = input;
+  const { meeting: clean, items: cleanItems, participants: cleanPeople } = input;
 
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -54,7 +54,7 @@ export async function POST(request) {
   // Build the PDF first: if it fails, nothing is saved or sent.
   let pdfBase64;
   try {
-    pdfBase64 = Buffer.from(await buildAgendaPdf(clean, cleanItems)).toString("base64");
+    pdfBase64 = Buffer.from(await buildAgendaPdf(clean, cleanItems, cleanPeople)).toString("base64");
   } catch {
     return fail(500, "Could not build the PDF.");
   }
@@ -71,6 +71,7 @@ export async function POST(request) {
       venue: clean.venue,
       recap: clean.recap,
       items: cleanItems,
+      participants: cleanPeople,
       recipient,
       status: "pending",
     })
@@ -89,8 +90,8 @@ export async function POST(request) {
         from,
         to: [recipient],
         subject: agendaSubject(clean),
-        html: agendaHtml(clean, cleanItems),
-        text: agendaText(clean, cleanItems),
+        html: agendaHtml(clean, cleanItems, cleanPeople),
+        text: agendaText(clean, cleanItems, cleanPeople),
         attachments: [
           { filename: `Tiffany-Weekly-Agenda-${clean.date}.pdf`, content: pdfBase64 },
         ],
