@@ -10,7 +10,7 @@ export default function Page() {
           <div className="title">
             <p className="eyebrow">Meeting agenda</p>
             <h1>Weekly Operations Meeting</h1>
-            <p className="sub">1 hour · Every Tuesday and Friday · Chairperson: General Manager · Secretary: HR Manager</p>
+            <p className="sub">Every Tuesday and Friday · Chairperson: General Manager · Secretary: HR Manager</p>
             <p className="meta-note">
               HR fills in the form on the left and the agenda builds itself. Download the PDF report, or enter the
               participants&apos; group email at the end and press Send.

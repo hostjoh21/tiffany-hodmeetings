@@ -47,7 +47,7 @@ npm run dev
 
 ## How it works
 - `components/AgendaForm.js`: the form and live agenda. Draft is kept in the browser until sent.
-- `app/api/send/route.js`: checks the access code, email and 60-minute total, saves to `meeting_agendas` (status `pending`), sends via Resend, then marks it `sent` or `failed`.
+- `app/api/send/route.js`: checks the access code and email (meeting length is free, set by HR), saves to `meeting_agendas` (status `pending`), sends via Resend, then marks it `sent` or `failed`.
 - `lib/agenda.js`: the 12 agenda items, time slots, and the email text and HTML.
 - `lib/pdf.js` and `app/api/pdf/route.js`: the A4 PDF report in the logo's colours (download button on the form; also attached to the email). The logo is embedded from `lib/logoData.js`.
 - The service role key stays on the server. The table has Row Level Security on with no public policies.

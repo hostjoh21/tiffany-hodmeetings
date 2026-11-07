@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   DEFAULT_ITEMS,
-  MEETING_LENGTH,
   buildAgenda,
   fmtDate,
   fmtTime,
@@ -99,7 +98,6 @@ export default function AgendaForm({ defaultEmail }) {
     }
   }
 
-  const over = agenda.total - MEETING_LENGTH;
 
   return (
     <div className="wrap">
@@ -163,7 +161,7 @@ export default function AgendaForm({ defaultEmail }) {
                       </div>
                       <div>
                         <label className="lab" htmlFor={"m" + i}>Minutes</label>
-                        <input id={"m" + i} type="number" min="1" max="60" value={items[i].mins}
+                        <input id={"m" + i} type="number" min="1" max="600" value={items[i].mins}
                           onChange={(e) => setItem(i, { mins: e.target.value })} />
                       </div>
                       <div className="full">
@@ -181,9 +179,7 @@ export default function AgendaForm({ defaultEmail }) {
             </div>
             <div className="total">
               <span>Total time: <b>{agenda.total}</b> min</span>
-              <span className={over === 0 ? "good" : "bad"}>
-                {over === 0 ? "Fits the 1 hour" : over > 0 ? `${over} min over` : `${-over} min left`}
-              </span>
+              <span>Ends at <b>{agenda.endTime}</b></span>
             </div>
           </div>
         </section>

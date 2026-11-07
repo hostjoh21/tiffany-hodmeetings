@@ -1,11 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
 import { timingSafeEqual } from "node:crypto";
 import {
-  MEETING_LENGTH,
   agendaHtml,
   agendaSubject,
   agendaText,
-  buildAgenda,
 } from "../../../lib/agenda";
 import { buildAgendaPdf } from "../../../lib/pdf";
 import { cleanAgendaInput } from "../../../lib/validate";
@@ -44,16 +42,6 @@ export async function POST(request) {
   const input = cleanAgendaInput(body.meeting, body.items);
   if (input.error) return fail(400, input.error);
   const { meeting: clean, items: cleanItems } = input;
-
-  const { total } = buildAgenda(clean, cleanItems);
-  if (total !== MEETING_LENGTH) {
-    return fail(
-      400,
-      total > MEETING_LENGTH
-        ? `The agenda is ${total - MEETING_LENGTH} minutes over 1 hour. Adjust the minutes.`
-        : `The agenda is ${MEETING_LENGTH - total} minutes short of 1 hour. Adjust the minutes.`
-    );
-  }
 
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
